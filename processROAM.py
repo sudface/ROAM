@@ -117,6 +117,9 @@ def LOAM(in_loam, out_loam, datestring):
     }
     df_loam = df_loam.rename(columns=loam_remap)
 
+    df_loam['ACT_STOP_STN'] = df_loam['ACT_STOP_STN'].map(lambda x: x.replace(" Light Rail", ""))
+    print(df_loam['ACT_STOP_STN'])
+
     # LOAM does not have column for trip start and ends.
     # get ORIG_STN and DEST_STN from first and last stop in each group
     df_loam = df_loam.sort_values(["TRIP_NAME", "NODE_SEQ_ORDER"]).reset_index(drop=True)
