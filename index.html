@@ -204,7 +204,7 @@
       modeSelect.addEventListener('change', () => {
         const selectedMode = modeSelect.value;
         dateSelect.innerHTML = '<option value="">Select a date...</option>';
-        dateSelect.style.display = 'block';
+        dateSelect.style.display = 'inline';
 
         groupedFiles[selectedMode]
           .sort((a, b) => b.date - a.date)
@@ -226,7 +226,7 @@
         const selectedFile = dateSelect.value;
         if (selectedFile) {
           loadJSON(selectedFile);
-          document.getElementById("stationSelect").style.display = "block";
+          document.getElementById("stationSelect").style.display = "inline";
         }
       });
     });
@@ -269,7 +269,7 @@
     document.getElementById('tripInfo').innerHTML = '';
     document.querySelector('#stopsTable tbody').innerHTML = '';
     document.getElementById('tripData').style.display = 'none';
-    document.getElementById("stationData").style.display = "block";
+    document.getElementById("stationData").style.display = "inline";
 
     // Get trips of that station and then sort and then tabulate
     const sortedTrips = stationTriplist[station]
