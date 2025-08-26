@@ -63,12 +63,8 @@ def build_trips(df):
 
 
 #! ROAM
-IN_ROAM_FILE = 'ROAM_20250822_all.psv'
-OUT_ROAM_PSV = 'ROAM_20250822_useful.psv'
-OUT_ROAM_JSON = 'ROAM_20250822.json'
-
 def ROAM(in_roam, out_roam):
-    print("roaming")
+    print(f"Parsing file {in_roam}")
     goodCols = [
         'ACT_STOP_STN',
         'ACT_STN_ARRV_TIME',
@@ -97,17 +93,13 @@ def ROAM(in_roam, out_roam):
     roam_parsed = build_trips(df_roam)
     with open(out_roam, "w") as f:
         json.dump(roam_parsed, f)
-
-ROAM(IN_ROAM_FILE, OUT_ROAM_JSON)
+        print(f"Saved to {out_roam}")
 
 #! LOAM
-
-IN_LOAM_FILE = 'LOAM_20250823.txt'
-OUT_LOAM_JSON = 'LOAM_20250823.json'
-
-def LOAM(in_loam, out_loam):
-    print("loaming")
-    df_loam = pd.read_csv(IN_LOAM_FILE, sep='|')
+def LOAM(in_loam, out_loam, datestring):
+    print(f"Parsing file {in_loam} for {datestring} services")
+    df_loam = pd.read_csv(in_loam, sep='|')
+    df_loam = df_loam[df_loam['SERVICE_DATE'] == datestring]
 
     # Remap LOAM -> ROAM columns
     loam_remap = {
@@ -126,7 +118,38 @@ def LOAM(in_loam, out_loam):
     df_loam["DEST_STN"] = df_loam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("last")
 
     loam_result = build_trips(df_loam)
-    with open(OUT_LOAM_JSON, "w") as f:
+    with open(out_loam, "w") as f:
         json.dump(loam_result, f)
+        print(f"Saved to {out_loam}")
 
-LOAM(IN_LOAM_FILE, OUT_LOAM_JSON)
+
+def main():
+    import argparse, datetime, os, sys
+    assertExists = lambda file: os.path.exists(file) or (print(f"Input file not found: {file}") or sys.exit(1))
+    
+    parser = argparse.ArgumentParser(description="Process raw LOAM or ROAM files.")
+
+    parser.add_argument('-r', '--roam', action='store_true', help='Process ROAM (Trains)')
+    parser.add_argument('-l', '--loam', action='store_true', help='Process LOAM (Light Rail)')
+    
+    parser.add_argument('date', type=str, help='Date of file in YYYYMMDD format')
+    args = parser.parse_args()
+    
+    if not any([args.roam, args.loam]):
+        parser.error('You must specify at least one of -r/--roam or -l/--loam.')
+
+    if args.roam:
+        in_file = f"ROAM_{args.date}.txt"
+        out_file = f"ROAM_{args.date}.json"
+        assertExists(in_file)
+        ROAM(in_file, out_file)
+    if args.loam:
+        in_file = f"LOAM_{args.date}.txt"
+        out_file = f"LOAM_{args.date}.json"
+        date = datetime.datetime.strptime(args.date, "%Y%m%d").strftime("%Y-%m-%d")
+
+        assertExists(os.path.exists(in_file))
+        LOAM(in_file, out_file, date)
+
+if __name__ == "__main__":
+    main()
