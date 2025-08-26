@@ -92,33 +92,39 @@
     .format(new Date(dateStr.replace(" ", "T")))
     .toLowerCase();
 
-  // Fetch trips JSON
-  fetch('ROAM_20250822.json')
-    .then(response => response.json())
-    .then(trips => {
-      // Build a map of station -> [tripname] for indexing on table
-      trips.forEach(trip => {
-        trip.STOPS.forEach(([_, station]) => {
-          if (!stationTriplist[station]) stationTriplist[station] = [];
-          stationTriplist[station].push(trip.TRIP_NAME);
+  function loadJSON(filename) {
+    // Fetch trips JSON
+    fetch(filename)
+      .then(response => response.json())
+      .then(trips => {
+        // Build a map of station -> [tripname] for indexing on table
+        stationTriplist = {};
+        trips.forEach(trip => {
+          trip.STOPS.forEach(([_, station]) => {
+            if (!stationTriplist[station]) stationTriplist[station] = [];
+            stationTriplist[station].push(trip.TRIP_NAME);
+          });
         });
-      });
 
-      // Restructure trip data so that key is the tripname for fast indexing
-      database = Object.fromEntries(
-        trips.map(trip => [trip.TRIP_NAME, trip])
-      );
+        // Restructure trip data so that key is the tripname for fast indexing
+        database = Object.fromEntries(
+          trips.map(trip => [trip.TRIP_NAME, trip])
+        );
 
-      // Show station selecter? selector? why are both correct
-      const stationSelect = document.getElementById('stationSelect');
-      stationSelect.innerHTML = '<option value="">Choose station</option>';
-      Object.keys(stationTriplist).sort().forEach(station => {
-        const option = document.createElement('option');
-        option.value = station;
-        option.textContent = station;
-        stationSelect.appendChild(option);
-      });
-    })
+        // Show station selecter? selector? why are both correct
+        const stationSelect = document.getElementById('stationSelect');
+        stationSelect.innerHTML = '<option value="">Choose station</option>';
+        Object.keys(stationTriplist).sort().forEach(station => {
+          const option = document.createElement('option');
+          option.value = station;
+          option.textContent = station;
+          stationSelect.appendChild(option);
+        });
+      })
+  }
+
+  // also available: LOAM_20250823.json
+  loadJSON('ROAM_20250822.json');
 
   // Handle station selection
   document.getElementById('stationSelect').addEventListener('change', () => {
@@ -179,7 +185,7 @@
       Selected trip: ${trip.TRIP_NAME} <br>
       ${trip.LINE} from ${trip.DEST_STN} to ${trip.ORIG_STN} <br>
       Departed ${trip.TIME}<br>
-      Total capacity: ${trip.CAPACITY}
+      Total seat capacity: ${trip.SEAT_CAPACITY}
       `
   };
 </script>
