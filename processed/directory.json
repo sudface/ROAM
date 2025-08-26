@@ -23,7 +23,14 @@
   "ROAM_20250807.json",
   "ROAM_20250808.json",
   "ROAM_20250809.json",
-  "ROAM_20250810.json"
+  "ROAM_20250810.json",
+  "FOAM_20250804.json",
+  "FOAM_20250805.json",
+  "FOAM_20250806.json",
+  "FOAM_20250807.json",
+  "FOAM_20250808.json",
+  "FOAM_20250809.json",
+  "FOAM_20250810.json"
  ],
  "./samples/": [
   "LOAM_20250823.json",

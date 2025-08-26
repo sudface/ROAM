@@ -2,7 +2,7 @@
 import os
 import requests
 from datetime import datetime, timedelta
-from processROAM import LOAM, ROAM
+from processROAM import LOAM, ROAM, FOAM
 import argparse
 
 import subprocess
@@ -90,6 +90,8 @@ def download_and_process_data(data_type: str, start_date: str, end_date: str, sa
                 # Run processing function
                 if data_type == "LOAM":
                     LOAM(infile, outfile, yyyy_mm_dd)
+                if data_type == "FOAM":
+                    FOAM(infile, outfile, yyyy_mm_dd)
                 elif data_type == "ROAM":
                     preprocess_roam(infile)
                     ROAM(infile, outfile)
@@ -111,6 +113,8 @@ if __name__ == "__main__":
                         help="Specify the start and end dates in YYYYMMDD format for LOAM.")
     parser.add_argument("-r", "--roam", nargs=2, metavar=("start_date", "end_date"),
                         help="Specify the start and end dates in YYYYMMDD format for ROAM.")
+    parser.add_argument("-f", "--foam", nargs=2, metavar=("start_date", "end_date"),
+                        help="Specify the start and end dates in YYYYMMDD format for FOAM.")
     args = parser.parse_args()
 
     if args.loam:
@@ -119,3 +123,6 @@ if __name__ == "__main__":
     if args.roam:
         start_date, end_date = args.roam
         download_and_process_data("ROAM", start_date, end_date)
+    if args.foam:
+        start_date, end_date = args.foam
+        download_and_process_data("FOAM", start_date, end_date)
