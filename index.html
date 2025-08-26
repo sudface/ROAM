@@ -106,6 +106,7 @@
         <th>From</th>
         <th>To</th>
         <th>At</th>
+        <th>Max Load</th>
       </tr>
     </thead>
     <tbody>
@@ -212,6 +213,14 @@
     .format(new Date(dateStr.replace(" ", "T")))
     .toLowerCase();
 
+    function loadColour(load, capacity) {
+      const ratio = load / capacity;
+      if (ratio <= 0.25) return "green";
+      if (ratio <= 0.5) return "orange";
+      if (ratio <= 0.75) return "red";
+      return "maroon";
+    }
+
   // Handle station selection
   document.getElementById('stationSelect').addEventListener('change', () => {
     const station = document.getElementById('stationSelect').value;
@@ -231,6 +240,7 @@
       .map(i => database[i])
       .sort((a, b) => new Date(a.STOPS.filter(v => v[1] == station)[0][2]) - new Date(b.STOPS.filter(v => v[1] == station)[0][2]))
       .forEach(trip => {
+        const maxLoad = Math.max(...trip.STOPS.map(stop => stop[3] || 0)); // Calculate max load
         const row = document.createElement('tr');
         row.innerHTML = `
           <td><a href="#tripPatronage" class="trip" onclick="showTrip('${trip.TRIP_NAME}')">${trip.TRIP_NAME}</a></td>
@@ -239,6 +249,7 @@
           <td>${trip.ORIG_STN}</td>
           <td>${trip.DEST_STN}</td>
           <td>${timeFormated(trip.STOPS.filter(v => v[1] == station)[0][2])}</td>
+          <td style="color: ${loadColour(maxLoad, trip.SEAT_CAPACITY)}">${maxLoad}</td>
         `;
         tbody.appendChild(row);
       });
@@ -249,7 +260,17 @@
       searchPanes: {
         columns: [1, 2, 3, 4]
       },
-      order: [[5, 'asc']]
+      order: [[5, 'asc']],
+      columnDefs: [{ 
+        targets: 6, 
+        type: 'num-fmt',
+        render: function ( data, type, row, meta ) {
+          if ( type === 'display' && data === "0" ) {
+            return "0-20";
+          }
+          return data;
+      }
+      }]
     });
   });
 
@@ -333,4 +354,4 @@
 </footer>
 </body>
 
-</html>
+</html> 
