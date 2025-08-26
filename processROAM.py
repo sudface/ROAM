@@ -65,7 +65,7 @@ def build_trips(df):
 #! ROAM
 def ROAM(in_roam, out_roam):
     print(f"Parsing file {in_roam}")
-    goodCols = [
+    importedCols = [
         'ACT_STOP_STN',
         'ACT_STN_ARRV_TIME',
         'ACT_STN_DPRT_TIME',
@@ -77,19 +77,24 @@ def ROAM(in_roam, out_roam):
         'DEST_STN',
         'NODE_SEQ_ORDER',
         'SEAT_CAPACITY',
-        'OCCUPANCY_RANGE'
+        'OCCUPANCY_RANGE',
+        'REPORTING_LINE'
     ]
+    df_roam = pd.read_csv(in_roam, sep='|', usecols=importedCols)
 
-    df_roam = pd.read_csv(in_roam, sep='|', usecols=goodCols)
+    # remove regional services becaue they aren't opal lol
+    BAD_LINES = ["Southern NSW", "North West NSW", "NSW TrainLink North Western Train Services", "NSW TrainLink Southern Train Services", "North Coast NSW", "Western NSW", "Southern NSW", "Southern NSW", "Western NSW", "North Coast NSW", "North West NSW"]
+    df_roam = df_roam[~df_roam['REPORTING_LINE'].isin(BAD_LINES)]
 
     # If a train doesn't have a departure time (terminates) then fill with arrival time
     df_roam['ACT_STN_DPRT_TIME'] = df_roam['ACT_STN_DPRT_TIME'].fillna(df_roam['ACT_STN_ARRV_TIME']).fillna(df_roam['PLN_STN_DPRT_TIME'])
     df_roam['SEAT_CAPACITY'] = df_roam['SEAT_CAPACITY'].fillna(0)
 
     # Save a PSV with the relevant columns (20MB -> 4MB)
-    # df_roam['TRIP_ZONE'] = df_roam['TRIP_ZONE'].map(linesMap)
-    # cols_keep = [c for c in goodCols if c not in ["ACT_STN_ARRV_TIME", "PLN_STN_DPRT_TIME"]]
-    # df_roam[cols_keep].to_csv(OUT_ROAM_PSV, sep='|', index=False)
+    # clean_df = df_roam
+    # cols_keep = [c for c in importedCols if c not in ["ACT_STN_ARRV_TIME", "PLN_STN_DPRT_TIME", "REPORTING_LINE"]]
+    # clean_df['TRIP_ZONE'] = clean_df['TRIP_ZONE'].map(LINES_MAP)
+    # clean_df[cols_keep].to_csv(out_roam + '.psv', sep='|', index=False)
 
     roam_parsed = build_trips(df_roam)
     with open(out_roam, "w") as f:

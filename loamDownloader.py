@@ -80,12 +80,12 @@ def download_and_process_data(data_type: str, start_date: str, end_date: str, sa
         outfile = os.path.join(save_dir, f"{data_type}_{yyyymmdd}.json")
 
         try:
+            print(f"Downloading: {infile}")
             response = requests.get(url, headers=headers, timeout=20)
             if response.status_code == 200:
                 # Save temp file
                 with open(infile, "wb") as f:
                     f.write(response.content)
-                print(f"Downloaded: {infile}")
 
                 # Run processing function
                 if data_type == "LOAM":
