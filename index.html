@@ -88,6 +88,7 @@
         <th>Station</th>
         <th>Time</th>
         <th># Passengers on arrival</th>
+        <th>∆ Passengers</th>
       </tr>
     </thead>
     <tbody>
@@ -106,7 +107,7 @@
         <th>From</th>
         <th>To</th>
         <th>At</th>
-        <th>Max Load</th>
+        <th>Peak Load</th>
       </tr>
     </thead>
     <tbody>
@@ -128,6 +129,7 @@
         // Build a map of station -> [tripname] for indexing on table
         stationTriplist = {};
         trips.forEach(trip => {
+          if (doubleCapacityLines.includes(trip.LINE)) trip.SEAT_CAPACITY = trip.SEAT_CAPACITY * 2;
           trip.STOPS.forEach(([_, station]) => {
             if (!stationTriplist[station]) stationTriplist[station] = [];
             stationTriplist[station].push(trip.TRIP_NAME);
@@ -209,6 +211,8 @@
     "F7": "#00B189", "F8": "#55622B", "F9": "#65B32E", "F10": "#5AB031" , "Stockton Ferry": "#5AB031", "MFF": "#3a78b6"
   };
 
+  const doubleCapacityLines = ["M1", "L2", "L3"]
+
   const timeFormated = (dateStr) => new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
     .format(new Date(dateStr.replace(" ", "T")))
     .toLowerCase();
@@ -284,12 +288,16 @@
     const passengers = [];
 
     trip.STOPS.forEach(([i, station, time, pax]) => {
+      const nextPax = trip.STOPS[i] ? trip.STOPS[i][3] || 0 : 0; // because i is the 1-indexed stop index
+      const delta = nextPax - pax;
+
       const row = document.createElement('tr');
       row.innerHTML = `
         <td>${i}</td>
         <td>${station}</td>
         <td>${timeFormated(time)}</td>
-        <td>${pax ? pax : "0-20"}</td>
+        <td style="color:${loadColour(pax, trip.SEAT_CAPACITY)}">${pax ? pax : "0-20"}</td>
+        <td style="color:${loadColour(delta + trip.SEAT_CAPACITY / 2, trip.SEAT_CAPACITY)}">${delta > 0 ? "+" : ""}${delta}</td>
       `;
       stopsTable.appendChild(row);
 
@@ -305,7 +313,7 @@
       Selected trip: ${trip.TRIP_NAME} <br>
       ${trip.LINE} from ${trip.ORIG_STN} to ${trip.DEST_STN} <br>
       Departed ${trip.TIME}<br>
-      Total seat capacity: ${trip.SEAT_CAPACITY}<br>
+      Total seat capacity: ${doubleCapacityLines.includes(trip.LINE) ? trip.SEAT_CAPACITY / 2 : trip.SEAT_CAPACITY}<br>
     `;
 
     const graph = document.getElementById('passengerGraph');
