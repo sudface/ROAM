@@ -7,26 +7,7 @@ Input ROAM data was prefiltered with the following to remove opal card segregati
 * grep "All card types" ROAM_20250822.txt >> ROAM_20250822_all.psv
 '''
 
-input_roam = 'ROAM_20250822_all.psv'
-output_roam = 'ROAM_20250822_useful.psv'
-output_json = 'ROAM_20250822.json'
-
-goodCols = [
-    'ACT_STOP_STN',
-    'ACT_STN_ARRV_TIME',
-    'ACT_STN_DPRT_TIME',
-    'PLN_STN_DPRT_TIME',
-    'SEGMENT_DIRECTION',
-    'TRIP_NAME',
-    'TRIP_ZONE',
-    'ORIG_STN',
-    'DEST_STN',
-    'NODE_SEQ_ORDER',
-    'SEAT_CAPACITY',
-    'OCCUPANCY_RANGE'
-]
-
-linesMap = {
+LINES_MAP = {
     'T7 Olympic Park Line': 'T7',
     'T8 Airport & South Line': 'T8',
     'T4 Eastern Suburbs & Illawarra Line': 'T4',
@@ -42,46 +23,110 @@ linesMap = {
     'T5 Cumberland Line': 'T5',
     'T1 Western Line': 'T1 Western',
     'T6 Lidcombe & Bankstown Line': 'T6',
-    'T3 Bankstown Line & T3 Liverpool & Inner West Line': 'T3'
+    'T3 Bankstown Line & T3 Liverpool & Inner West Line': 'T3',
+    'IWLR-191': 'L1',
+    '1001_L2': 'L2',
+    '1001_L3': 'L3',
+    '1001_LX': 'LX',
+    'ISD-17-6720_L4': 'L4',
+    'NT_NLR': 'NLR',
 }
 
-
-df = pd.read_csv(input_roam, sep='|', usecols=goodCols)
-
-# If a train doesn't have a departure time (terminates) then fill with arrival time
-df['ACT_STN_DPRT_TIME'] = df['ACT_STN_DPRT_TIME'].fillna(df['ACT_STN_ARRV_TIME']).fillna(df['PLN_STN_DPRT_TIME'])
-
-# Remap long line names to line numbers
-df['TRIP_ZONE'] = df['TRIP_ZONE'].map(linesMap)
-
-goodCols.remove("ACT_STN_ARRV_TIME")
-goodCols.remove("PLN_STN_DPRT_TIME")
-df[goodCols].to_csv(output_roam, sep='|', index=False)
+mapLines = lambda x: LINES_MAP.get(x, x)
 
 # Group by run number and build structure
-result = []
-for trip_name, group in df.groupby("TRIP_NAME"):
-    trip_info = {
-        "TRIP_NAME": trip_name,
-        "LINE": group["TRIP_ZONE"].iloc[0],
-        "ORIG_STN": group["ORIG_STN"].iloc[0], # all origStn in the trip should be the same, so get the first
-        "DEST_STN": group["DEST_STN"].iloc[0],
-        "TIME": group["ACT_STN_DPRT_TIME"].sort_values().iloc[0],
-        "CAPACITY": int(group["SEAT_CAPACITY"].iloc[0]),
-        "SEGMENT_DIRECTION": group["SEGMENT_DIRECTION"].iloc[0],
+def build_trips(df):
+    result = []
+    for trip_name, group in df.groupby("TRIP_NAME"):
+        trip_info = {
+            "TRIP_NAME": trip_name,
+            "LINE": mapLines(group["TRIP_ZONE"].iloc[0]), # Remap long line names to line numbers
+            "ORIG_STN": group["ORIG_STN"].iloc[0], # all origStn in the trip should be the same, so get the first
+            "DEST_STN": group["DEST_STN"].iloc[0],
+            "TIME": group["ACT_STN_DPRT_TIME"].sort_values().iloc[0],
+            "SEAT_CAPACITY": int(group["SEAT_CAPACITY"].iloc[0]),
+            "SEGMENT_DIRECTION": group["SEGMENT_DIRECTION"].iloc[0],
 
-        "STOPS": group.sort_values("NODE_SEQ_ORDER")[
-            ["NODE_SEQ_ORDER", "ACT_STOP_STN", "ACT_STN_DPRT_TIME", "OCCUPANCY_RANGE"]
-        ].values.tolist()
+            "STOPS": group.sort_values("NODE_SEQ_ORDER")[
+                ["NODE_SEQ_ORDER", "ACT_STOP_STN", "ACT_STN_DPRT_TIME", "OCCUPANCY_RANGE"]
+            ].values.tolist()
+        }
+        
+        # floor the occupancy range
+        for stop in trip_info["STOPS"]:
+            stop[3] = int(stop[3].split("-")[0])   
+            if stop[3]:
+                stop[3] -= 1
+        
+        result.append(trip_info)
+    return result
+
+
+#! ROAM
+IN_ROAM_FILE = 'ROAM_20250822_all.psv'
+OUT_ROAM_PSV = 'ROAM_20250822_useful.psv'
+OUT_ROAM_JSON = 'ROAM_20250822.json'
+
+def ROAM(in_roam, out_roam):
+    print("roaming")
+    goodCols = [
+        'ACT_STOP_STN',
+        'ACT_STN_ARRV_TIME',
+        'ACT_STN_DPRT_TIME',
+        'PLN_STN_DPRT_TIME',
+        'SEGMENT_DIRECTION',
+        'TRIP_NAME',
+        'TRIP_ZONE',
+        'ORIG_STN',
+        'DEST_STN',
+        'NODE_SEQ_ORDER',
+        'SEAT_CAPACITY',
+        'OCCUPANCY_RANGE'
+    ]
+
+    df_roam = pd.read_csv(in_roam, sep='|', usecols=goodCols)
+
+    # If a train doesn't have a departure time (terminates) then fill with arrival time
+    df_roam['ACT_STN_DPRT_TIME'] = df_roam['ACT_STN_DPRT_TIME'].fillna(df_roam['ACT_STN_ARRV_TIME']).fillna(df_roam['PLN_STN_DPRT_TIME'])
+
+    # Save a PSV with the relevant columns (20MB -> 4MB)
+    # df_roam['TRIP_ZONE'] = df_roam['TRIP_ZONE'].map(linesMap)
+    # cols_keep = [c for c in goodCols if c not in ["ACT_STN_ARRV_TIME", "PLN_STN_DPRT_TIME"]]
+    # df_roam[cols_keep].to_csv(OUT_ROAM_PSV, sep='|', index=False)
+
+    roam_parsed = build_trips(df_roam)
+    with open(out_roam, "w") as f:
+        json.dump(roam_parsed, f)
+
+ROAM(IN_ROAM_FILE, OUT_ROAM_JSON)
+
+#! LOAM
+
+IN_LOAM_FILE = 'LOAM_20250823.txt'
+OUT_LOAM_JSON = 'LOAM_20250823.json'
+
+def LOAM(in_loam, out_loam):
+    print("loaming")
+    df_loam = pd.read_csv(IN_LOAM_FILE, sep='|')
+
+    # Remap LOAM -> ROAM columns
+    loam_remap = {
+        "ORIG_STN": "ACT_STOP_STN",
+        "DIRECTION": "SEGMENT_DIRECTION",
+        "STOP_ID_START_TIME": "TRIP_NAME",
+        "ROUTE_ID": "TRIP_ZONE",
+        "STOP_SEQ": "NODE_SEQ_ORDER"
     }
-    
-    # floor the occupancy range
-    for stop in trip_info["STOPS"]:
-        stop[3] = int(stop[3].split("-")[0])   
-        if stop[3]:
-            stop[3] -= 1
-    
-    result.append(trip_info)
+    df_loam = df_loam.rename(columns=loam_remap)
 
-with open(output_json, "w") as f:
-    json.dump(result, f)
+    # LOAM does not have column for trip start and ends.
+    # get ORIG_STN and DEST_STN from first and last stop in each group
+    df_loam = df_loam.sort_values(["TRIP_NAME", "NODE_SEQ_ORDER"]).reset_index(drop=True)
+    df_loam["ORIG_STN"] = df_loam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("first")
+    df_loam["DEST_STN"] = df_loam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("last")
+
+    loam_result = build_trips(df_loam)
+    with open(OUT_LOAM_JSON, "w") as f:
+        json.dump(loam_result, f)
+
+LOAM(IN_LOAM_FILE, OUT_LOAM_JSON)
