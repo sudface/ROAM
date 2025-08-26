@@ -65,8 +65,11 @@
 <h2>Select a Dataset and Station</h2>
 
 <div>
-  <select id="fileSelect">
-    <option value="">Select a file...</option>
+  <select id="modeSelect">
+    <option value="">Select a mode...</option>
+  </select>
+  <select id="dateSelect" style="display: none;">
+    <option value="">Select a date...</option>
   </select>
   <select id="stationSelect" style="display: none;">
     <option value="">Loading...</option>
@@ -160,42 +163,71 @@
     return [date, `${date.toLocaleString('en-US', { weekday: 'short' })} ${d} ${date.toLocaleString('en-US', { month: 'short' })} ${y}`]
   }
 
-  // Fetch directory.json and populate select
+  // Fetch directory.json and populate mode and date selects
   fetch('./processed/directory.json')
     .then(res => res.json())
     .then(data => {
-      const select = document.getElementById('fileSelect');
+      const modeSelect = document.getElementById('modeSelect');
+      const dateSelect = document.getElementById('dateSelect');
       const OAMs = {
         "ROAM": ["Trains", "#F37021"],
         "FOAM": ["Ferries", "#00774B"],
         "LOAM": ["Light Rail", "#BE1622"],
-      }
+      };
 
-      // Flatten files with path and sort by newest date
-      const allFiles = Object.entries(data)
-        .flatMap(([dir, files]) => files.map(file => dir + file))
-        .map(path => {
-          const match = path.match(/([LRFB]OAM)_(\d{8})\.json/);
-          if (!match) return null;
-          const [_, type, dateStr] = match;
-          return {path, type, dateStr, date: formatDate(dateStr)[0] };
-        })
-        .filter(Boolean) // only valid combos ig
-        .sort((a, b) => b.date - a.date)
-        .forEach(({path, type, dateStr}) => {
-          // Then add to the select
-          const option = document.createElement('option');
-          option.value = path;
-          option.textContent = `${OAMs[type][0]}: ${formatDate(dateStr)[1]}`;
-          option.style.color = OAMs[type][1]
-          select.appendChild(option);
-        });
+      // Flatten files with path and group by mode
+      // This method was so new that my vscode JS engine didn't even know about it
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy
+      const groupedFiles = Object.groupBy(
+        Object.entries(data)
+          .flatMap(([dir, files]) => files.map(file => dir + file))
+          .map(path => {
+            const match = path.match(/([LRFB]OAM)_(\d{8})\.json/);
+            if (!match) return null;
+            const [_, type, dateStr] = match;
+            return {path, type, dateStr, date: formatDate(dateStr)[0]};
+          })
+          .filter(Boolean),
+          ({type}) => type // This is some wild syntax
+      )
 
-      select.addEventListener('change', () => {
-        if (select.value) loadJSON(select.value);
-        document.getElementById("stationSelect").style.display = "block";
+      // Populate mode dropdown
+      Object.keys(groupedFiles).forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = OAMs[type][0];
+        option.style.color = OAMs[type][1];
+        modeSelect.appendChild(option);
+      });
+
+      // Handle mode selection
+      modeSelect.addEventListener('change', () => {
+        const selectedMode = modeSelect.value;
+        dateSelect.innerHTML = '<option value="">Select a date...</option>';
+        dateSelect.style.display = 'block';
+
+        groupedFiles[selectedMode]
+          .sort((a, b) => b.date - a.date)
+          .forEach(({path, dateStr}) => {
+            const option = document.createElement('option');
+            option.value = path;
+            option.textContent = formatDate(dateStr)[1];
+            dateSelect.appendChild(option);
+          });
+
+        // Hide all data, have only mode selector showing
+        document.getElementById("stationSelect").style.display = "none";
         document.getElementById("stationData").style.display = "none";
         document.getElementById("tripData").style.display = "none";
+      });
+
+      // Handle date selection
+      dateSelect.addEventListener('change', () => {
+        const selectedFile = dateSelect.value;
+        if (selectedFile) {
+          loadJSON(selectedFile);
+          document.getElementById("stationSelect").style.display = "block";
+        }
       });
     });
 </script>
@@ -362,4 +394,4 @@
 </footer>
 </body>
 
-</html> 
+</html>
