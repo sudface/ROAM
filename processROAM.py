@@ -72,7 +72,8 @@ def build_trips(df):
         
         if trip_info["LINE"] == "M1" and trip_info["TRIP_NAME"].endswith(":1000"):
             trip_info["TRIP_NAME"] = trip_info["TRIP_NAME"][9:16]
-        elif trip_info["LINE"][0] == "F" and trip_info["LINE"][1].isnumeric():
+        elif trip_info["LINE"][0] == "F" and trip_info["LINE"][1].isnumeric() and len(trip_info["LINE"]) == 2:
+            # don't do F10 ferry because for some reason it shares IDs with the other inner harbour ferry
             run = trip_info["TRIP_NAME"].split("-")
             trip_info["TRIP_NAME"] = run[0] + "-" + run[-1].split(".")[-1]
         
