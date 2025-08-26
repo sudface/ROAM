@@ -3,7 +3,7 @@ Analysis of the Rail Opal Assignment Model
 
 The data used is derived from Transport for NSW datasets, <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a>. Transport uses Opal tap data to estimate what services passengers are taking. 
 
-The ROAM is provided in a single 300MB PSV file per day, with all sorts of extraneous information about specific opal card demographics. This is unnecessary for patronage, so `prefilter.sh` removes this and converts it down to a [~19MB file](./ROAM_20250822_all.txt). Further removing unnecesssary columns and repetition can bring this down to a [useful 5MB psv file](./ROAM_20250822_usefulcols.psv).
+The ROAM is provided in a single 300MB PSV file per day, with all sorts of extraneous information about specific opal card demographics. This is unnecessary for patronage, so `prefilter.sh` removes this and converts it down to a [~19MB file](./samples/ROAM_20250822_all.txt). Further removing unnecesssary columns and repetition can bring this down to a [useful 5MB psv file](./samples/ROAM_20250822_usefulcols.psv).
 
 The PSV file as a format is hard to visualise, so a python [script](./processROAM.py) `processROAM.py` converts this into a JSON file with information about each trip, the stops it makes, and the change of passenger load over time, providing more valuable insights.
 

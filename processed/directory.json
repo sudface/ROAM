@@ -25,7 +25,7 @@
   "ROAM_20250809.json",
   "ROAM_20250810.json"
  ],
- "./": [
+ "/samples/": [
   "LOAM_20250823.json",
   "ROAM_20250822.json"
  ]
