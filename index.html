@@ -65,10 +65,11 @@
       color: #f37021;
       text-decoration: none;
       font-weight: bold;
+      text-decoration: underline;
     }
 
     a.trip:hover {
-      text-decoration: underline;
+      color: #db5705;
     }
 
     footer {
@@ -121,6 +122,10 @@
     div#tripData, div#stationData {
       display: none;
     }
+
+    table#stopsTable {
+      width: 60%
+    }
   </style>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.2/css/searchPanes.dataTables.min.css">
@@ -132,7 +137,7 @@
 </head>
 
 <body>
-
+<h1>NSW Public Transport Load Insights</h1>
 <h2>Select a Dataset and Station</h2>
 
 <div>
@@ -149,6 +154,7 @@
 
 <div id="stationData">
   <h2>Trips Stopping Here</h2>
+  <p>Select a trip to view further details.</p>
   <table id="tripsTable">
     <thead>
       <tr>
@@ -323,7 +329,7 @@
     function loadColour(load, capacity) {
       const ratio = load / capacity;
       if (ratio <= 0.25) return "green";
-      if (ratio <= 0.5) return "orange";
+      if (ratio <= 0.5) return "darkorange";
       if (ratio <= 0.75) return "red";
       return "maroon";
     }
@@ -365,7 +371,11 @@
     $('#tripsTable').DataTable({
       dom: 'Plfrtip',
       searchPanes: {
-        columns: [1, 2, 3, 4]
+        columns: [1, 2, 3, 4],
+        dtOpts: {
+          scrollY: '100px'
+        },
+        collapse: false,
       },
       order: [[5, 'asc']],
       columnDefs: [{ 
@@ -376,7 +386,17 @@
             return "0-20";
           }
           return data;
-      }
+        }
+      },{
+        targets: 2,
+        render: function ( data, type, row, meta ) {
+          if ( type === 'display') {
+            if (["Up", "Inbound"].includes(data)) return "Towards City";
+            if (["Down", "Outbound"].includes(data)) return "Away from City";
+            return data;
+          }
+          return data;
+        }
       }]
     });
   });
@@ -445,9 +465,13 @@
 
 <footer>
   <p>
-    The information on this page is derived from data kindly provided by by Transport for NSW: <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a>. Transport uses Opal tap data to estimate what services passengers are taking. 
-    <br><br>
-    If you find any issues, would like to see the code, or think you can make the website better, contribute <a href="https://github.com/sudface/ROAM">here on github</a>.<br>
+    The information on this page is derived from data kindly provided by by Transport for NSW: 
+    <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and 
+    <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a> and
+    <a href="https://opendata.transport.nsw.gov.au/data/dataset/foam-ferry-opal-assignment-model">FOAM</a>. 
+    Transport uses Opal tap data to estimate what services passengers are taking. 
+    <br>
+    If you find any issues, would like to see the code, or can help make the website better, contribute <a href="https://github.com/sudface/ROAM">here on github</a>.<br>
   </p>
   <hr>
   <p class="legal">
