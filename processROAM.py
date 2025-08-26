@@ -84,6 +84,7 @@ def ROAM(in_roam, out_roam):
 
     # If a train doesn't have a departure time (terminates) then fill with arrival time
     df_roam['ACT_STN_DPRT_TIME'] = df_roam['ACT_STN_DPRT_TIME'].fillna(df_roam['ACT_STN_ARRV_TIME']).fillna(df_roam['PLN_STN_DPRT_TIME'])
+    df_roam['SEAT_CAPACITY'] = df_roam['SEAT_CAPACITY'].fillna(0)
 
     # Save a PSV with the relevant columns (20MB -> 4MB)
     # df_roam['TRIP_ZONE'] = df_roam['TRIP_ZONE'].map(linesMap)
@@ -93,7 +94,7 @@ def ROAM(in_roam, out_roam):
     roam_parsed = build_trips(df_roam)
     with open(out_roam, "w") as f:
         json.dump(roam_parsed, f)
-        print(f"Saved to {out_roam}")
+        print(f"Saved {len(roam_parsed)} trips to {out_roam}")
 
 #! LOAM
 def LOAM(in_loam, out_loam, datestring):
@@ -116,11 +117,12 @@ def LOAM(in_loam, out_loam, datestring):
     df_loam = df_loam.sort_values(["TRIP_NAME", "NODE_SEQ_ORDER"]).reset_index(drop=True)
     df_loam["ORIG_STN"] = df_loam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("first")
     df_loam["DEST_STN"] = df_loam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("last")
+    df_loam['SEAT_CAPACITY'] = df_loam['SEAT_CAPACITY'].fillna(0)
 
     loam_result = build_trips(df_loam)
     with open(out_loam, "w") as f:
         json.dump(loam_result, f)
-        print(f"Saved to {out_loam}")
+        print(f"Saved {len(loam_result)} trips to {out_loam}")
 
 
 def main():
