@@ -1,0 +1,32 @@
+{
+ "/processed/": [
+  "LOAM_20250519.json",
+  "LOAM_20250520.json",
+  "LOAM_20250521.json",
+  "LOAM_20250522.json",
+  "LOAM_20250523.json",
+  "LOAM_20250602.json",
+  "LOAM_20250603.json",
+  "LOAM_20250604.json",
+  "LOAM_20250605.json",
+  "LOAM_20250606.json",
+  "ROAM_20250728.json",
+  "ROAM_20250729.json",
+  "ROAM_20250730.json",
+  "ROAM_20250731.json",
+  "ROAM_20250801.json",
+  "ROAM_20250802.json",
+  "ROAM_20250803.json",
+  "ROAM_20250804.json",
+  "ROAM_20250805.json",
+  "ROAM_20250806.json",
+  "ROAM_20250807.json",
+  "ROAM_20250808.json",
+  "ROAM_20250809.json",
+  "ROAM_20250810.json"
+ ],
+ "./": [
+  "LOAM_20250823.json",
+  "ROAM_20250822.json"
+ ]
+}
