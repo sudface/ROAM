@@ -45,6 +45,11 @@
       height: 400px;
       margin-bottom: 1.5em;
     }
+
+    p.legal {
+      font-size: small;
+      color: rgb(68, 68, 68);
+    }
   </style>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.2/css/searchPanes.dataTables.min.css">
@@ -300,8 +305,22 @@
 
 <footer>
   <p>
-    Data from <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a> - Transport for NSW.<br>
-    View the processing code <a href="./processROAM.py">here</a>.<br>
+    The information on this page is derived from data kindly provided by by Transport for NSW: <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a>. Transport uses Opal tap data to estimate what services passengers are taking. 
+    <br><br>
+    If you find any issues, would like to see the code, or think you can make the website better, contribute <a href="https://github.com/sudface/ROAM">here on github</a>.<br>
+  </p>
+  <hr>
+  <p class="legal">
+      Made with <a href="https://plotly.com/javascript/">Plotly.JS</a> and <a href="https://datatables.net/">DataTables</a>.<br>
+      Please be aware that the data presented on this website is subject to potential inaccuracies. 
+      While efforts have been made to ensure accuracy, we cannot guarantee the precision of the information.
+      You are advised to exercise discretion and independently verify the data before making any decisions based on it. 
+      The website owner and contributors are not liable for any consequences arising from the use of potentially inaccurate data.
+      <br><br>
+      This work is licensed under a <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.
+      You are free to:<br>
+      - Share: Copy and redistribute the material in any medium or format.<br>
+      - Adapt: Remix, transform, and build upon the material for any purpose.<br>
   </p>
 </footer>
 </body>
