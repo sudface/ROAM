@@ -1,5 +1,5 @@
 {
- "/processed/": [
+ "./processed/": [
   "LOAM_20250519.json",
   "LOAM_20250520.json",
   "LOAM_20250521.json",
@@ -25,7 +25,7 @@
   "ROAM_20250809.json",
   "ROAM_20250810.json"
  ],
- "/samples/": [
+ "./samples/": [
   "LOAM_20250823.json",
   "ROAM_20250822.json"
  ]
