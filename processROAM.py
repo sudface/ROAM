@@ -30,6 +30,18 @@ LINES_MAP = {
     '1001_LX': 'LX',
     'ISD-17-6720_L4': 'L4',
     'NT_NLR': 'NLR',
+    'Stkn Stockton Ferry': 'Stockton Ferry',
+    'MFF Manly Fast Ferry': 'MFF',
+    'F1 Manly': 'F1',
+    'F2 Taronga Zoo': 'F2',
+    'F3 Parramatta River': 'F3',
+    'F4 Pyrmont Bay': 'F4',
+    'F5 Neutral Bay': 'F5',
+    'F6 Mosman Bay': 'F6',
+    'F7 Double Bay': 'F7',
+    'F8 Cockatoo Island': 'F8',
+    'F9 Watsons Bay': 'F9',
+    'F10 Blackwattle Bay': 'F10',
 }
 
 mapLines = lambda x: LINES_MAP.get(x, x)
@@ -57,6 +69,12 @@ def build_trips(df):
             stop[3] = int(stop[3].split("-")[0])   
             if stop[3]:
                 stop[3] -= 1
+        
+        if trip_info["LINE"] == "M1" and trip_info["TRIP_NAME"].endswith(":1000"):
+            trip_info["TRIP_NAME"] = trip_info["TRIP_NAME"][9:16]
+        elif trip_info["LINE"][0] == "F" and trip_info["LINE"][1].isnumeric():
+            run = trip_info["TRIP_NAME"].split("-")
+            trip_info["TRIP_NAME"] = run[0] + "-" + run[-1].split(".")[-1]
         
         result.append(trip_info)
     return result
@@ -118,7 +136,6 @@ def LOAM(in_loam, out_loam, datestring):
     df_loam = df_loam.rename(columns=loam_remap)
 
     df_loam['ACT_STOP_STN'] = df_loam['ACT_STOP_STN'].map(lambda x: x.replace(" Light Rail", ""))
-    print(df_loam['ACT_STOP_STN'])
 
     # LOAM does not have column for trip start and ends.
     # get ORIG_STN and DEST_STN from first and last stop in each group
@@ -132,6 +149,37 @@ def LOAM(in_loam, out_loam, datestring):
         json.dump(loam_result, f)
         print(f"Saved {len(loam_result)} trips to {out_loam}")
 
+#! FOAM
+def FOAM(in_foam, out_foam, datestring):
+    print(f"Parsing file {in_foam} for {datestring} services")
+    df_foam = pd.read_csv(in_foam, sep='|')
+    df_foam = df_foam[df_foam['RUN_DATE'] == datestring]
+
+    # Remap FOAM -> ROAM columns
+    foam_remap = {
+        "RUN_NUMBER": "TRIP_NAME",
+        "ROUTE_DESC": "TRIP_ZONE",
+        "CAPACITY": "SEAT_CAPACITY",
+        "DIRECTION": "SEGMENT_DIRECTION",
+        "STOP_SEQ": "NODE_SEQ_ORDER",
+        "LOCATION": "ACT_STOP_STN",
+        "DEPRT_ACTUAL": "ACT_STN_DPRT_TIME",
+    }
+    df_foam = df_foam.rename(columns=foam_remap)
+
+    df_foam['ACT_STOP_STN'] = df_foam['ACT_STOP_STN'].map(lambda x: x.split(" Wharf")[0]) # Also catches "Wharf 1" cases
+
+    # largely the same as LOAM
+    df_foam = df_foam.sort_values(["TRIP_NAME", "NODE_SEQ_ORDER"]).reset_index(drop=True)
+    df_foam["ORIG_STN"] = df_foam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("first")
+    df_foam["DEST_STN"] = df_foam.groupby("TRIP_NAME")["ACT_STOP_STN"].transform("last")
+    df_foam['SEAT_CAPACITY'] = df_foam['SEAT_CAPACITY'].fillna(0)
+
+    foam_result = build_trips(df_foam)
+    with open(out_foam, "w") as f:
+        json.dump(foam_result, f)
+        print(f"Saved {len(foam_result)} trips to {out_foam}")
+
 
 def main():
     import argparse, datetime, os, sys
@@ -141,12 +189,13 @@ def main():
 
     parser.add_argument('-r', '--roam', action='store_true', help='Process ROAM (Trains)')
     parser.add_argument('-l', '--loam', action='store_true', help='Process LOAM (Light Rail)')
+    parser.add_argument('-f', '--foam', action='store_true', help='Process FOAM (Ferry)')
     
     parser.add_argument('date', type=str, help='Date of file in YYYYMMDD format')
     args = parser.parse_args()
     
-    if not any([args.roam, args.loam]):
-        parser.error('You must specify at least one of -r/--roam or -l/--loam.')
+    if not any([args.roam, args.loam, args.foam]):
+        parser.error('You must specify at least one of -r or -l or -f')
 
     if args.roam:
         in_file = f"ROAM_{args.date}.txt"
@@ -160,6 +209,13 @@ def main():
 
         assertExists(os.path.exists(in_file))
         LOAM(in_file, out_file, date)
+    if args.foam:
+        in_file = f"FOAM_{args.date}.txt"
+        out_file = f"FOAM_{args.date}.json"
+        date = datetime.datetime.strptime(args.date, "%Y%m%d").strftime("%Y-%m-%d")
+
+        assertExists(os.path.exists(in_file))
+        FOAM(in_file, out_file, date)
 
 if __name__ == "__main__":
     main()

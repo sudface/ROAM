@@ -27,6 +27,7 @@
  ],
  "./samples/": [
   "LOAM_20250823.json",
-  "ROAM_20250822.json"
+  "ROAM_20250822.json",
+  "FOAM_20250822.json"
  ]
 }
