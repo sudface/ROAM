@@ -11,123 +11,6 @@
       --dark-color: #0e85b0;
     }
 
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 20px;
-      background-color: #f9f9f9;
-      color: #333;
-      line-height: 1.6;
-    }
-
-    h2 {
-      color: #444;
-      border-bottom: 2px solid var(--main-color);
-      padding-bottom: 5px;
-    }
-
-    select {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1rem;
-      background-color: #fff;
-      transition: border-color 0.3s;
-    }
-
-    select#modeSelect {
-      color: var(--main-color);
-    }
-
-    select:focus {
-      border-color: var(--main-color);
-      outline: none;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 20px;
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    th, td {
-      border: 1px solid #ddd;
-      padding: 12px;
-      text-align: left;
-    }
-
-    th {
-      background-color: #f4f4f4;
-      color: #555;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-
-    a.trip {
-      color: var(--main-color);
-      text-decoration: none;
-      font-weight: bold;
-      text-decoration: underline;
-    }
-
-    a.trip:hover {
-      color: var(--dark-color);
-    }
-
-    footer {
-      margin-top: 5%;
-      padding: 20px;
-      background-color: #f4f4f4;
-      border-top: 1px solid #ddd;
-      text-align: center;
-    }
-
-    footer a {
-      color: var(--main-color);
-      text-decoration: none;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
-
-    p.legal {
-      font-size: 0.9rem;
-      color: #666;
-    }
-
-    button {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 5px;
-      background-color: var(--main-color);
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background-color 0.3s;
-    }
-
-    button:hover {
-      background-color: var(--dark-color);
-    }
-
-    div#passengerGraph {
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      background-color: #fff;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      height: 400px;
-    }
-
     div#tripData, div#stationData, div#routeSelect {
       display: none;
     }
@@ -137,28 +20,19 @@
     }
 
     input[type="text"] {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      font-size: 1rem;
-      background-color: #fff;
-      transition: border-color 0.3s;
       width: 100%;
       max-width: 400px;
     }
-
-    input[type="text"]:focus {
-      border-color: var(--main-color);
-      outline: none;
-    }
-  </style>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.2/css/searchPanes.dataTables.min.css">
+</style>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/searchpanes/2.1.2/css/searchPanes.dataTables.min.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/searchpanes/2.1.2/js/dataTables.searchPanes.min.js"></script>
-<script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
-<script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
+  <script src="https://cdn.datatables.net/searchpanes/2.1.2/js/dataTables.searchPanes.min.js"></script>
+  <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.20.0.min.js"></script>
+  <script src="./scripts.js"></script>
 </head>
 
 <body>
@@ -269,13 +143,6 @@
         populateAutocomplete('routeSearch', validRoutes);
       })
   }
-  
-  // Format 20250822 -> 22 Aug 2025
-  const formatDate = yyyymmdd => {
-    const [y, m, d] = [yyyymmdd.slice(0,4), yyyymmdd.slice(4,6), yyyymmdd.slice(6,8)];
-    const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d))
-    return [date, `${date.toLocaleString('en-US', { weekday: 'short' })} ${d} ${date.toLocaleString('en-US', { month: 'short' })} ${y}`]
-  }
 
   // Fetch directory.json and populate mode and date selects
   fetch('./processed/directory.json')
@@ -283,12 +150,6 @@
     .then(data => {
       const modeSelect = document.getElementById('modeSelect');
       const dateSelect = document.getElementById('dateSelect');
-      const OAMs = {
-        "ROAM": ["Trains", "#F37021"],
-        "FOAM": ["Ferries", "#00774B"],
-        "LOAM": ["Light Rail", "#BE1622"],
-        "BOAM": ["Buses", "#009ed7"],
-      };
 
       const groupedFiles = Object.groupBy(
         Object.entries(data)
