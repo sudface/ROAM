@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BOAM Patronage Viewer</title>
   <style>
+    :root {
+      --main-color: #009ed7;
+      --dark-color: #0e85b0;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 20px;
@@ -16,7 +21,7 @@
 
     h2 {
       color: #444;
-      border-bottom: 2px solid #009ed7;
+      border-bottom: 2px solid var(--main-color);
       padding-bottom: 5px;
     }
 
@@ -29,8 +34,12 @@
       transition: border-color 0.3s;
     }
 
+    select#modeSelect {
+      color: var(--main-color);
+    }
+
     select:focus {
-      border-color: #009ed7;
+      border-color: var(--main-color);
       outline: none;
     }
 
@@ -62,14 +71,14 @@
     }
 
     a.trip {
-      color: #009ed7;
+      color: var(--main-color);
       text-decoration: none;
       font-weight: bold;
       text-decoration: underline;
     }
 
     a.trip:hover {
-      color: #0e85b0;
+      color: var(--dark-color);
     }
 
     footer {
@@ -81,7 +90,7 @@
     }
 
     footer a {
-      color: #009ed7;
+      color: var(--main-color);
       text-decoration: none;
     }
 
@@ -98,7 +107,7 @@
       padding: 10px 15px;
       border: none;
       border-radius: 5px;
-      background-color: #009ed7;
+      background-color: var(--main-color);
       color: #fff;
       font-size: 1rem;
       cursor: pointer;
@@ -106,7 +115,7 @@
     }
 
     button:hover {
-      background-color: #0e85b0;
+      background-color: var(--dark-color);
     }
 
     div#passengerGraph {
@@ -139,7 +148,7 @@
     }
 
     input[type="text"]:focus {
-      border-color: #009ed7;
+      border-color: var(--main-color);
       outline: none;
     }
   </style>
@@ -306,7 +315,7 @@
       // Handle mode selection
       modeSelect.addEventListener('change', () => {
         const selectedMode = modeSelect.value;
-        if (selectedMode !== "BOAM") window.location.href = './index.html'
+        if (selectedMode !== "BOAM") window.location.href = `./index.html?mode=${selectedMode}`
         dateSelect.innerHTML = '<option value="">Select a date...</option>';
         dateSelect.style.display = 'inline';
 
@@ -324,6 +333,10 @@
         document.getElementById("stationData").style.display = "none";
         document.getElementById("tripData").style.display = "none";
       });
+
+      // Default to buses
+      modeSelect.value = "BOAM";
+      modeSelect.dispatchEvent(new Event('change'));
 
       // Handle date selection
       dateSelect.addEventListener('change', () => {
@@ -361,11 +374,11 @@
   }
 
   // Fetch the stoplist and group by suburb
-  fetch('./BOAM_stoplist.json')
+  fetch('./BOAM/stoplist.json')
     .then(response => response.json())
     .then(data => stopList = data);
   
-  fetch('./busroutes.json')
+  fetch('./BOAM/busroutes.json')
     .then(res => res.json())
     .then(routes => routeList = routes);
 </script>
@@ -550,7 +563,7 @@
 <footer>
   <p>
     The information on this page is derived from data kindly provided by by Transport for NSW: 
-    <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-bus-opal-assignment-model">BOAM</a>. 
+    <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-bus-opal-assignment-model">BOAM</a>. <br>
     Transport uses Opal tap data to track how many passengers are taking services. 
     <br>
     If you find any issues, would like to see the code, or can help make the website better, contribute <a href="https://github.com/sudface/ROAM">here on github</a>.<br>

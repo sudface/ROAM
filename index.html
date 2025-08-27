@@ -6,6 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ROAM Patronage Viewer</title>
   <style>
+    :root {
+      --main-color: #f37021;
+      --dark-color: #db5705;
+    }
+
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 20px;
@@ -16,7 +21,7 @@
 
     h2 {
       color: #444;
-      border-bottom: 2px solid #f37021;
+      border-bottom: 2px solid var(--main-color);
       padding-bottom: 5px;
     }
 
@@ -29,8 +34,12 @@
       transition: border-color 0.3s;
     }
 
+    select#modeSelect {
+      color: var(--main-color);
+    }
+
     select:focus {
-      border-color: #f37021;
+      border-color: var(--main-color);
       outline: none;
     }
 
@@ -62,14 +71,14 @@
     }
 
     a.trip {
-      color: #f37021;
+      color: var(--main-color);
       text-decoration: none;
       font-weight: bold;
       text-decoration: underline;
     }
 
     a.trip:hover {
-      color: #db5705;
+      color: var(--dark-color);
     }
 
     footer {
@@ -81,7 +90,7 @@
     }
 
     footer a {
-      color: #f37021;
+      color: var(--main-color);
       text-decoration: none;
     }
 
@@ -98,7 +107,7 @@
       padding: 10px 15px;
       border: none;
       border-radius: 5px;
-      background-color: #f37021;
+      background-color: var(--main-color);
       color: #fff;
       font-size: 1rem;
       cursor: pointer;
@@ -106,7 +115,7 @@
     }
 
     button:hover {
-      background-color: #d65c1a;
+      background-color: var(--dark-color);
     }
 
     div#passengerGraph {
@@ -125,6 +134,10 @@
 
     table#stopsTable {
       width: 60%
+    }
+
+    a:hover {
+      cursor: pointer;
     }
   </style>
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
@@ -240,18 +253,33 @@
     return [date, `${date.toLocaleString('en-US', { weekday: 'short' })} ${d} ${date.toLocaleString('en-US', { month: 'short' })} ${y}`]
   }
 
+  const OAMs = {
+    "ROAM": ["Trains", "#F37021"],
+    "FOAM": ["Ferries", "#00774B"],
+    "LOAM": ["Light Rail", "#BE1622"],
+    "BOAM": ["Buses", "#009ed7"],
+  };
+
+  function setCSScolour(oam) {
+    function darkenColor(hex) {
+      hex = hex.replace(/^#/, '');
+      return '#' + [0,2,4].map(i => 
+        Math.floor(parseInt(hex.slice(i,i+2),16) * 0.8)
+            .toString(16).padStart(2,'0')
+      ).join('');
+    }
+
+    color = OAMs[oam][1];
+    document.documentElement.style.setProperty('--main-color', color);
+    document.documentElement.style.setProperty('--dark-color', darkenColor(color));
+  }
+
   // Fetch directory.json and populate mode and date selects
   fetch('./processed/directory.json')
     .then(res => res.json())
     .then(data => {
       const modeSelect = document.getElementById('modeSelect');
       const dateSelect = document.getElementById('dateSelect');
-      const OAMs = {
-        "ROAM": ["Trains", "#F37021"],
-        "FOAM": ["Ferries", "#00774B"],
-        "LOAM": ["Light Rail", "#BE1622"],
-        "BOAM": ["Buses", "#009ed7"],
-      };
 
       // Flatten files with path and group by mode
       // This method was so new that my vscode JS engine didn't even know about it
@@ -281,7 +309,13 @@
       // Handle mode selection
       modeSelect.addEventListener('change', () => {
         const selectedMode = modeSelect.value;
+        
         if (selectedMode == "BOAM") window.location.href = './boam.html'
+        const newURL = new URL(window.location.href);
+        newURL.searchParams.set('mode', selectedMode); // set current mode in url
+        window.history.replaceState({}, '', newURL); 
+
+        setCSScolour(selectedMode);
         dateSelect.innerHTML = '<option value="">Select a date...</option>';
         dateSelect.style.display = 'inline';
 
@@ -299,6 +333,15 @@
         document.getElementById("stationData").style.display = "none";
         document.getElementById("tripData").style.display = "none";
       });
+
+      const params = new URLSearchParams(window.location.search);
+      const modeFromURL = params.get('mode'); // e.g., ?mode=ROAM autofil
+
+      if (modeFromURL) {
+        modeSelect.value = modeFromURL;
+        if (!modeSelect.value) modeSelect.selectedIndex = 0; // fallback
+        modeSelect.dispatchEvent(new Event('change'));
+      }
 
       // Handle date selection
       dateSelect.addEventListener('change', () => {
