@@ -250,6 +250,7 @@
         "ROAM": ["Trains", "#F37021"],
         "FOAM": ["Ferries", "#00774B"],
         "LOAM": ["Light Rail", "#BE1622"],
+        "BOAM": ["Buses", "#009ed7"],
       };
 
       // Flatten files with path and group by mode
@@ -280,6 +281,7 @@
       // Handle mode selection
       modeSelect.addEventListener('change', () => {
         const selectedMode = modeSelect.value;
+        if (selectedMode == "BOAM") window.location.href = './boam.html'
         dateSelect.innerHTML = '<option value="">Select a date...</option>';
         dateSelect.style.display = 'inline';
 
