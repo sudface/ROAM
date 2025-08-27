@@ -101,7 +101,9 @@ function averageReducer(data, labels, step = 3) {
 
   for (let i = 0; i < data.length; i += step) {
     const window = data.slice(i, i + step);
-    const avg = window.reduce((a, b) => a + b, 0) / step;
+    const avg = window.reduce((a, b) => a + b, 0) / window.length;
+    // divide by window length instead of step to account for the final window being small.
+    
     result.push(avg);
     resultLabels.push(labels[i])
   }
