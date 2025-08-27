@@ -54,6 +54,7 @@
 
 <div id="stationData">
   <h2>Services of Route <span id="routeId">xxx</span></h2>
+  <div id="timeGraph"></div>
   <p>Select a trip to view further details.</p>
   <table id="tripsTable">
     <thead>
@@ -103,7 +104,7 @@
   let stopList = {};
   let routeList = {};
   const getRouteLongName = (num) => `${num} - ${routeList[num]}`
-  
+
   function loadJSON(filename) {
     // document.getElementById('stationSelect').innerHTML = '<option value="">Loading...</option>';
     // Fetch trips JSON
@@ -141,6 +142,8 @@
 
         validRoutes = Object.keys(servicesByRoute).map(v => [v, getRouteLongName(v)])
         populateAutocomplete('routeSearch', validRoutes);
+
+        SELECTED_DATE = parseYYYYMMDD(filename.match(/\d{8}/)[0])
       })
   }
 
@@ -171,8 +174,6 @@
   const GRAPH_MAX_POINTS = 12;
   const timeFormated = (timeStr) => timeStr.substring(0,5)
 
-
-  
   // Handle route selection
   document.getElementById('routeSearch').addEventListener('input', () => {
     const route = document.getElementById('routeSearch').value.toUpperCase();
@@ -199,26 +200,55 @@
     const getSuburb = id => stopList[id][1].toTitleCase();
 
     // Get trips of that route and then sort and then tabulate
-    const sortedTrips = servicesByRoute[route]
-      .map(i => database[i])
-      .forEach(trip => {
-        trip.ORIG_STN ??= getSuburb(trip.STOPS[0][1]);
-        trip.DEST_STN ??= getSuburb(trip.STOPS[trip.STOPS.length - 1][1]);
+    const trips = servicesByRoute[route].map(i => database[i]);
+    trips.forEach(trip => {
+      trip.ORIG_STN ??= getSuburb(trip.STOPS[0][1]);
+      trip.DEST_STN ??= getSuburb(trip.STOPS[trip.STOPS.length - 1][1]);
 
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td><a href="#tripPatronage" class="trip" onclick="showTrip('${trip.TRIP_ID}')">${trip.TRIP_ID}</a></td>
-          <td style="color:">${trip.ROUTE}</td>
-          <td>${trip.DIRECTION}</td>
-          <td>${trip.ORIG_STN}</td>
-          <td>${trip.DEST_STN}</td>
-          <td>${trip.TIME}</td>
-          <td style="color: ${loadColour(trip.PEAK_LOAD, trip.CAPACITY)}">${loadPercentage(trip.PEAK_LOAD, trip.CAPACITY)}</td>
-        `;
-        tbody.appendChild(row);
-      });
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td><a href="#tripPatronage" class="trip" onclick="showTrip('${trip.TRIP_ID}')">${trip.TRIP_ID}</a></td>
+        <td style="color:">${trip.ROUTE}</td>
+        <td>${trip.DIRECTION}</td>
+        <td>${trip.ORIG_STN}</td>
+        <td>${trip.DEST_STN}</td>
+        <td>${trip.TIME}</td>
+        <td style="color: ${loadColour(trip.PEAK_LOAD, trip.CAPACITY)}">${loadPercentage(trip.PEAK_LOAD, trip.CAPACITY)}</td>
+      `;
+      tbody.appendChild(row);
+    });
 
-      initDatatables();
+    // Plot peak load per service
+    const inboundTrips = trips.filter(trip => trip.DIRECTION === 'Inbound').map(t => [parseTimeToDate(t.TIME, SELECTED_DATE), t.PEAK_LOAD]).sort((a, b) => a[0] - b[0]);
+    const outboundTrips = trips.filter(trip => trip.DIRECTION === 'Outbound').map(t => [parseTimeToDate(t.TIME, SELECTED_DATE), t.PEAK_LOAD]).sort((a, b) => a[0] - b[0]);
+
+    const inboundData = {
+      x: inboundTrips.map(t => t[0]),
+      y: inboundTrips.map(t => t[1]),
+      name: 'Inbound',
+      marker: { color: 'blue' },
+      line: { shape: 'spline' },
+      fill: 'tozeroy',
+    };
+
+    const outboundData = {
+      x: outboundTrips.map(t => t[0]),
+      y: outboundTrips.map(t => t[1]),
+      name: 'Outbound',
+      marker: { color: 'red' },
+      line: { shape: 'spline' },
+      fill: 'tozeroy',
+    };
+
+    Plotly.newPlot(document.getElementById('timeGraph'), [inboundData, outboundData], {
+      title: `Peak Load per Service for Route ${route}`,
+      xaxis: { title: 'Trip time', type: 'date' },  // important: date axis
+      yaxis: { title: 'Peak Load' },
+      mode: 'lines+markers',
+    });
+
+
+    initDatatables();
   });
 
   // Display a particular trip

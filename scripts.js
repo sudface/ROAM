@@ -1,3 +1,4 @@
+let SELECTED_DATE;
 const lineColours = {
   "T1 North Shore": "#f89c1c", "T1 Western": "#f89c1c", "T2": "#0097cd", "T3": "#f35e21", "T4": "#015aa5", 
   "T5": "#c32190", "T6": "#4f6dab", "T7": "#6e818e", "T8": "#00964c", "T9": "#d21f2f", 
@@ -8,6 +9,19 @@ const lineColours = {
 };
 
 const doubleCapacityLines = ["M1", "L2", "L3"]
+
+function parseYYYYMMDD(yyyymmdd) {
+  const [y, m, d] = [yyyymmdd.slice(0, 4), yyyymmdd.slice(4, 6), yyyymmdd.slice(6, 8)];
+  return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+}
+
+// 08:23:34 => date obj
+function parseTimeToDate(timeStr, date = new Date()) {
+  const [h, m, s] = timeStr.split(':').map(Number);
+  const d = new Date(date);
+  d.setHours(h, m, s, 0);
+  return d;
+}
 
 // Format YYYYMMDD -> "DD MMM YYYY"
 function formatDate(yyyymmdd) {
