@@ -1,17 +1,17 @@
 # ROAM
 Analysis of the Rail Opal Assignment Model
 
-The data used is derived from Transport for NSW datasets, <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a>. Transport uses Opal tap data to estimate what services passengers are taking. 
+The data used is derived from Transport for NSW datasets, <a href="https://opendata.transport.nsw.gov.au/data/dataset/roam-rail-opal-assignment-model">ROAM</a> and <a href="https://opendata.transport.nsw.gov.au/data/dataset/loam-light-rail-opal-assignment-model">LOAM</a> and FOAM. Transport uses Opal tap data to estimate what services passengers are taking. 
 
 The ROAM is provided in a single 300MB PSV file per day, with all sorts of extraneous information about specific opal card demographics. This is unnecessary for patronage, so `prefilter.sh` removes this and converts it down to a [~19MB file](./samples/ROAM_20250822_all.txt). Further removing unnecesssary columns and repetition can bring this down to a [useful 5MB psv file](./samples/ROAM_20250822_usefulcols.psv).
 
 The PSV file as a format is hard to visualise, so a python [script](./processROAM.py) `processROAM.py` converts this into a JSON file with information about each trip, the stops it makes, and the change of passenger load over time, providing more valuable insights.
 
-To automate the collection of data, `loamDownloader.py` [here](./loamDownloader.py) downloads datasets in a time range for either the LOAM or ROAM and automatically processes them into the JSON file.
+To automate the collection of data, `loamDownloader.py` [here](./loamDownloader.py) downloads datasets in a time range for either the LOAM or ROAM and automatically processes them into the JSON file. Data samples available in [./samples](./samples/)
 
 To make this data easy to view, [index.html](./index.html) displays each trip on a graph and allows sorting and filtering of stations and services. A sample is deployed at https://sudface.github.io/ROAM/.
 
-Example trip from output JSON file:
+Example trip from [output JSON](./samples/ROAM_20250822.json) file:
 ```json
 {
     "TRIP_NAME": "0136-001-101-002:1000",
@@ -59,6 +59,7 @@ options:
   start_date end_date   A date range in the YYYYMMDD format to download
   -l                    Download the LOAM dataset (Trains)
   -r                    Download the ROAM dataset (Light Rail)
+  -f                    Download the FOAM dataset (Ferries)
 ```
 
 ## Processor
@@ -67,11 +68,12 @@ Can be used from the command line, or imported in a python script
 Has two main module functions: 
  * `ROAM(in_roam, out_roam)` 
  * `LOAM(in_loam, out_loam, datestring)`
+ * `FOAM(in_loam, out_loam, datestring)`
  * * Where `datestring` is of the hyphenated form `2025-08-22`
 
 Or via the command line:
 ```
-usage: processROAM.py [-h] [-r] [-l] date
+usage: processROAM.py [-h] [-r] [-l] [-f] date
 
 positional arguments:
   date        Date of file in YYYYMMDD format. 
@@ -81,4 +83,5 @@ options:
   -h, --help  Show this help message and exit
   -r, --roam  Process ROAM (Trains)
   -l, --loam  Process LOAM (Light Rail)
+  -f, --foam  Process FOAM (Ferries)
 ```
