@@ -15,6 +15,10 @@ function parseYYYYMMDD(yyyymmdd) {
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
 }
 
+const timeFormated = (dateStr) => new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+    .format(new Date(dateStr.replace(" ", "T")))
+    .toLowerCase();
+
 // 08:23:34 => date obj
 function parseTimeToDate(timeStr, date = new Date()) {
   const [h, m, s] = timeStr.split(':').map(Number);
@@ -68,7 +72,14 @@ function initDatatables() {
         }
         return data;
       }
-    }]
+    },{
+      targets: 5,
+      render: function ( data, type, row, meta ) {
+        if ( type === 'display') return timeFormated(data);
+        else return data;
+      }
+    }
+  ]
   });
 }
 

@@ -152,10 +152,6 @@
 
 <!-- Data Vis Logic -->
 <script>
-  const timeFormated = (dateStr) => new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-    .format(new Date(dateStr.replace(" ", "T")))
-    .toLowerCase();
-
   // Handle station selection
   document.getElementById('stationSelect').addEventListener('change', () => {
     const station = document.getElementById('stationSelect').value;
@@ -183,7 +179,7 @@
           <td>${trip.SEGMENT_DIRECTION}</td>
           <td>${trip.ORIG_STN}</td>
           <td>${trip.DEST_STN}</td>
-          <td>${timeFormated(trip.STOPS.filter(v => v[1] == station)[0][2])}</td>
+          <td>${trip.STOPS.filter(v => v[1] == station)[0][2]}</td>
           <td style="color: ${loadColour(maxLoad, trip.SEAT_CAPACITY)}">${maxLoad}</td>
         `;
         tbody.appendChild(row);
