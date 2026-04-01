@@ -172,7 +172,7 @@
 <!-- Data Vis Logic -->
 <script>
   const GRAPH_MAX_POINTS = 12;
-  const timeFormated = (timeStr) => timeStr.substring(0,5)
+  const timeSubstr = (timeStr) => timeStr.substring(0,5)
 
   // Handle route selection
   document.getElementById('routeSearch').addEventListener('input', () => {
@@ -269,14 +269,14 @@
       row.innerHTML = `
         <td>${i}</td>
         <td>${station}</td>
-        <td>${timeFormated(time)}</td>
+        <td>${timeSubstr(time)}</td>
         <td style="color:${loadColour(pax, trip.CAPACITY)}">${pax ? pax : "0-20"}</td>
         <td style="color:${loadColour(delta + trip.CAPACITY / 2, trip.CAPACITY)}">${delta > 0 ? "+" : ""}${delta}</td>
       `;
       stopsTable.appendChild(row);
 
       // For the graph
-      stations.push(`${station} - ${timeFormated(time)}`);
+      stations.push(`${station} - ${timeSubstr(time)}`);
       passengers.push(pax);
     });
     [passengers, stations] = averageReducer(passengers, stations, stations.length/GRAPH_MAX_POINTS );
@@ -284,7 +284,7 @@
     document.getElementById('tripData').style.display = 'block';
     document.getElementById("tripInfo").innerHTML = `
       Selected trip: ${trip.TRIP_ID} <br>
-      ${trip.ROUTE} from ${trip.ORIG_STN} to ${trip.DEST_STN}, at ${timeFormated(trip.TIME)}<br>
+      ${trip.ROUTE} from ${trip.ORIG_STN} to ${trip.DEST_STN}, at ${timeSubstr(trip.TIME)}<br>
       Bus type: ${trip.BUS_TYPE}<br>
       Total capacity: ${trip.CAPACITY}<br>
       Depot: ${trip.DEPOT}<br>
