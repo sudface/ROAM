@@ -7,11 +7,11 @@ The ROAM is provided in a single 300MB PSV file per day, with all sorts of extra
 
 The PSV file as a format is hard to visualise, so a python [script](./processROAM.py) `processROAM.py` converts this into a JSON file with information about each trip, the stops it makes, and the change of passenger load over time, providing more valuable insights.
 
-To automate the collection of data, `loamDownloader.py` [here](./loamDownloader.py) downloads datasets in a time range for either the LOAM or ROAM and automatically processes them into the JSON file. Data samples available in [./samples](./samples/)
+To automate the collection of data, `loamDownloader.py` [here](./loamDownloader.py) downloads datasets in a time range for either the LOAM or ROAM and automatically processes them into the JSON file. Data samples available in [https://github.com/sudface/ROAM_data](https://github.com/sudface/ROAM_data)
 
 To make this data easy to view, [index.html](./index.html) displays each trip on a graph and allows sorting and filtering of stations and services. A sample is deployed at https://sudface.github.io/ROAM/.
 
-Example trip from [output JSON](./samples/ROAM_20250822.json) file:
+Example trip from output JSON file:
 ```json
 {
     "TRIP_NAME": "0136-001-101-002:1000",

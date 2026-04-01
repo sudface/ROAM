@@ -128,8 +128,10 @@ function averageReducer(data, labels, step = 3) {
 }
 
 function loadDirectory(nextSelectId, modeSelectPreFn, defaultLogic) {
+  const dataBasename = window.location.hostname.includes("github") ? "https://raw.githubusercontent.com/sudface/ROAM_data/refs/heads/main" : ".";
+  
   // Fetch directory.json and populate mode and date selects
-  fetch('./processed/directory.json')
+  fetch(`${dataBasename}/processed/directory.json`)
   .then(res => res.json())
   .then(data => {
     const modeSelect = document.getElementById('modeSelect');
@@ -145,7 +147,7 @@ function loadDirectory(nextSelectId, modeSelectPreFn, defaultLogic) {
           const match = path.match(/([LRFB]OAM)_(\d{8})\.json/);
           if (!match) return null;
           const [_, type, dateStr] = match;
-          return {path, type, dateStr, date: formatDate(dateStr)[0]};
+          return {path: dataBasename + path, type, dateStr, date: formatDate(dateStr)[0]};
         })
         .filter(Boolean),
         ({type}) => type // This is some wild syntax
