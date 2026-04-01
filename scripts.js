@@ -15,9 +15,13 @@ function parseYYYYMMDD(yyyymmdd) {
   return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
 }
 
-const timeFormated = (dateStr) => new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
+function timeFormated(dateStr) {
+  if (dateStr.length > 6) return dateStr; // Return if already formatted
+
+  return new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
     .format(new Date(dateStr.replace(" ", "T")))
     .toLowerCase();
+}
 
 // 08:23:34 => date obj
 function parseTimeToDate(timeStr, date = new Date()) {
