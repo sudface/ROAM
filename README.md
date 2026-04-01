@@ -56,9 +56,9 @@ usage: loamDownloader.py [-h] [-l start_date end_date] [-r start_date end_date]
 
 options:
   -h, --help            Show this help message and exit
-  start_date end_date   A date range in the YYYYMMDD format to download
-  -l                    Download the LOAM dataset (Trains)
-  -r                    Download the ROAM dataset (Light Rail)
+  start_date end_date   A date range in the *UNHYPHENATED* YYYYMMDD format to download
+  -l                    Download the LOAM dataset (light rail)
+  -r                    Download the ROAM dataset (rail (trains))
   -f                    Download the FOAM dataset (Ferries)
 ```
 
