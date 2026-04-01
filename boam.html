@@ -143,7 +143,7 @@
         validRoutes = Object.keys(servicesByRoute).map(v => [v, getRouteLongName(v)])
         populateAutocomplete('routeSearch', validRoutes);
 
-        SELECTED_DATE = parseYYYYMMDD(filename.match(/\d{8}/)[0])
+        SELECTED_DATE = parseYYYYMMDD(filename.match(/\d{8}/)[0]);
       })
   }
 
