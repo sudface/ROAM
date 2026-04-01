@@ -41,9 +41,17 @@
   <select id="dateSelect" style="display: none;">
     <option value="">Select a date...</option>
   </select>
+
+  <select id="compareDateSelect" style="display: none;">
+    <option value="">Compare with (optional...)</option>
+  </select>
+
+
   <select id="stationSelect" style="display: none;">
     <option value="">Loading...</option>
   </select>
+
+  
 </div>
 
 <div id="stationData">
@@ -70,6 +78,7 @@
   <h2 id="tripPatronage">Patronage for Selected Trip</h2>
   <div id="passengerGraph"></div>
   <p style="color: darkred">Note: Transport only provides data in resolutions of 20, rounded down.<br>Therefore, a patronage of "0" actually represents anywhere from "0-20" passengers</p>
+  <p style="color: darkred">If using the Compare Dates function, ensure you are comparing the same days of the week. Run Numbers must match between the compared dates. </p>
 
   <hr>
   <br>
@@ -93,6 +102,8 @@
 <script>
   let stationTriplist = {};
   let database = {};
+
+  let compareDatabase = {};
 
   function loadJSON(filename) {
     document.getElementById('stationSelect').innerHTML = '<option value="">Loading...</option>';
@@ -124,6 +135,19 @@
           option.textContent = station;
           stationSelect.appendChild(option);
         });
+
+        const compareSelect = document.getElementById('compareDateSelect');
+        compareSelect.innerHTML = '<option value="">Compare with (optional...)</option>';
+
+        // reuse same options as dateSelect
+        [...dateSelect.options].forEach(opt => {
+          if (opt.value) {
+            const clone = opt.cloneNode(true);
+            compareSelect.appendChild(clone);
+          }
+        });
+
+        compareSelect.style.display = 'inline';
       })
   }
 
@@ -148,6 +172,22 @@
   }
 
   loadDirectory("stationSelect", modeSelectPreFn, defaultLogic);
+
+  document.getElementById('compareDateSelect').addEventListener('change', (e) => {
+    const filename = e.target.value;
+    if (!filename) {
+      compareDatabase = {};
+      return;
+    }
+
+    fetch(filename)
+      .then(res => res.json())
+      .then(trips => {
+        compareDatabase = Object.fromEntries(
+          trips.map(trip => [trip.TRIP_NAME, trip])
+        );
+      });
+  });
 </script>
 
 <!-- Data Vis Logic -->
@@ -173,6 +213,15 @@
       .forEach(trip => {
         const maxLoad = Math.max(...trip.STOPS.map(stop => stop[3] || 0)); // Calculate max load
         const row = document.createElement('tr');
+        const compareTrip = compareDatabase[trip.TRIP_NAME];
+
+        let compareMaxLoad = '—';
+        if (compareTrip) {
+          compareMaxLoad = Math.max(...compareTrip.STOPS.map(stop => stop[3] || 0));
+        }
+
+        const compareDate = document.getElementById('compareDateSelect').value;
+
         row.innerHTML = `
           <td><a href="#tripPatronage" class="trip" onclick="showTrip('${trip.TRIP_NAME}')">${trip.TRIP_NAME}</a></td>
           <td style="color: ${lineColours[trip.LINE]}">${trip.LINE}</td>
@@ -181,9 +230,27 @@
           <td>${trip.DEST_STN}</td>
           <td>${trip.STOPS.filter(v => v[1] == station)[0][2]}</td>
           <td style="color: ${loadColour(maxLoad, trip.SEAT_CAPACITY)}">${maxLoad}</td>
+          ${
+            compareDate
+              ? `<td style="color: ${loadColour(compareMaxLoad, trip.SEAT_CAPACITY)}">${compareMaxLoad}</td>`
+              : ''
+          }
         `;
         tbody.appendChild(row);
       });
+
+      const compareDate = $('#compareDateSelect option:selected');
+
+      // Remove existing compare column if present
+      $('#tripsTable thead tr th.compare-col').remove();
+
+      if (compareDate.val()) {
+        const th = document.createElement('th');
+        th.classList.add('compare-col');
+        th.textContent = `Peak Load (${compareDate.text()})`;
+        document.querySelector('#tripsTable thead tr').appendChild(th);
+      }
+
 
       initDatatables();
     });
@@ -192,6 +259,9 @@
   function showTrip(tripName) {
     const stopsTable = document.querySelector('#stopsTable tbody');
     stopsTable.innerHTML = '';
+
+    const compareDate = document.getElementById('compareDateSelect').value;
+    const compareTrip = compareDatabase[tripName];
 
     const trip = database[tripName];
     const stations = [];
@@ -212,11 +282,24 @@
       stopsTable.appendChild(row);
 
       // For the graph
-      stations.push(`${station} - ${timeFormated(time)}`);
+      stations.push(compareTrip ? station : `${station} - ${timeFormated(time)}`);
       passengers.push(pax);
     });
     passengers.push(0);
     passengers.shift();
+    
+    let compareStations = [];
+    let comparePassengers = [];
+
+    if (compareTrip) {
+      compareTrip.STOPS.forEach(([i, station, time, pax]) => {
+        compareStations.push(station);
+        comparePassengers.push(pax || 0);
+      });
+
+      comparePassengers.push(0);
+      comparePassengers.shift();
+    }
 
     document.getElementById('tripData').style.display = 'block';
     document.getElementById("tripInfo").innerHTML = `
@@ -233,7 +316,10 @@
     } else {
       // Plot the passenger load graph
       graph.style.display = 'block';
-      Plotly.newPlot(graph, [{
+      const traces = [];
+
+      // Primary (current date)
+      traces.push({
         x: stations,
         y: passengers,
         type: 'scatter',
@@ -241,10 +327,27 @@
         marker: { color: lineColours[trip.LINE] },
         line: { shape: 'linear' },
         fill: 'tozeroy',
-      }], {
-        title: `Passenger Load over time, ${trip.TRIP_NAME}<br><sub>Departed ${trip.TIME}</sub>`,
+        name: 'Selected Date'
+      });
+
+      // Comparison (grey overlay)
+      if (compareTrip) {
+        traces.push({
+          x: compareStations,
+          y: comparePassengers,
+          type: 'scatter',
+          mode: 'lines+markers',
+          marker: { color: 'grey' },
+          line: { color: 'grey', dash: 'dot' },
+          name: 'Comparison Date'
+        });
+      }
+
+      Plotly.newPlot(graph, traces, {
+        title: `Passenger Load over time, ${trip.TRIP_NAME}<br><sub>Departed ${trip.TIME} vs ${compareTrip.TIME}</sub>`,
         xaxis: { title: 'Station' },
-        yaxis: { title: 'Passengers' }
+        yaxis: { title: 'Passengers' },
+        showlegend: true
       });
     }
   };
