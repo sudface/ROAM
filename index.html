@@ -282,7 +282,7 @@
       stopsTable.appendChild(row);
 
       // For the graph
-      stations.push(compareTrip ? station : `${station} - ${timeFormated(time)}`);
+      stations.push(compareTrip ? station : `${station} - ${timeFormated(time).split(' ')[1]}`);
       passengers.push(pax);
     });
     passengers.push(0);
@@ -344,7 +344,7 @@
       }
 
       Plotly.newPlot(graph, traces, {
-        title: `Passenger Load over time, ${trip.TRIP_NAME}<br><sub>Departed ${trip.TIME} vs ${compareTrip.TIME}</sub>`,
+        title: `Passenger Load over time, ${trip.TRIP_NAME}<br><sub>Departed ${trip.TIME}` + (compareTrip ? ` vs ${compareTrip.TIME}</sub>` : '</sub>'),
         xaxis: { title: 'Station' },
         yaxis: { title: 'Passengers' },
         showlegend: true
