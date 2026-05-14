@@ -11,6 +11,8 @@ To automate the collection of data, `loamDownloader.py` [here](./loamDownloader.
 
 To make this data easy to view, [index.html](./index.html) displays each trip on a graph and allows sorting and filtering of stations and services. A sample is deployed at https://sudface.github.io/ROAM/.
 
+The sample takes data stored in a separate data repo [here](https://github.com/sudface/ROAM_data). The data location is controlled in `const dataBasename` in `loadDirectory()`.
+
 Example trip from output JSON file:
 ```json
 {
